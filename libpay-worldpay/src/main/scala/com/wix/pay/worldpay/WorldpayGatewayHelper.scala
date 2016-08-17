@@ -51,9 +51,9 @@ object WorldpayGatewayHelper {
             }
           </paymentDetails>
 
-        case _ => throw new PaymentErrorException(s"Unsupported credit card network: $network")
+        case _ => throw PaymentErrorException(s"Unsupported credit card network: $network")
       }
-      case None => throw new PaymentErrorException("Unknown credit card network")
+      case None => throw PaymentErrorException("Unknown credit card network")
     }
   }
 

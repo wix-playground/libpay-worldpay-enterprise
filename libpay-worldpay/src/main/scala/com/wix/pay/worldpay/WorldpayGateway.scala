@@ -64,9 +64,9 @@ class WorldpayGateway(endpointUrl: String = Endpoints.production,
 
       response match {
         case WasAuthorizedSuccessfully(orderId) => orderParser.stringify(WorldpayAuthorization(orderId, currencyAmount.currency))
-        case AuthorizationFailed(event, code, description) if event == "REFUSED" => throw new PaymentRejectedException(s"Error code: $code, Error message: $description")
-        case AuthorizationFailed(event, code, description) if event == "ERROR" => throw new PaymentErrorException(s"Error code: $code, Error message: $description")
-        case res => throw new PaymentErrorException(s"Worldpay server returned ${res.status.intValue}: ${res.entity.asString}")
+        case AuthorizationFailed(event, code, description) if event == "REFUSED" => throw PaymentRejectedException(s"Error code: $code, Error message: $description")
+        case AuthorizationFailed(event, code, description) if event == "ERROR" => throw PaymentErrorException(s"Error code: $code, Error message: $description")
+        case res => throw PaymentErrorException(s"Worldpay server returned ${res.status.intValue}: ${res.entity.asString}")
       }
     }
   }
@@ -81,8 +81,8 @@ class WorldpayGateway(endpointUrl: String = Endpoints.production,
 
       response match {
         case WasCancelledSuccessfully(orderCode) => orderParser.stringify(WorldpayAuthorization(orderCode, order.currency))
-        case ModificationFailed(errorCode, errorDescription) => throw new PaymentErrorException(s"Error code: $errorCode, Error message: $errorDescription")
-        case res => throw new PaymentErrorException(s"Worldpay server returned ${res.status.intValue}: ${res.entity.asString}")
+        case ModificationFailed(errorCode, errorDescription) => throw PaymentErrorException(s"Error code: $errorCode, Error message: $errorDescription")
+        case res => throw PaymentErrorException(s"Worldpay server returned ${res.status.intValue}: ${res.entity.asString}")
       }
     }
   }
@@ -104,8 +104,8 @@ class WorldpayGateway(endpointUrl: String = Endpoints.production,
 
       response match {
         case WasCapturedSuccessfully(orderCode, currency) => orderParser.stringify(WorldpayAuthorization(orderCode, currency))
-        case ModificationFailed(errorCode, errorDescription) => throw new PaymentErrorException(s"Error code: $errorCode, Error message: $errorDescription")
-        case res => throw new PaymentErrorException(s"Worldpay server returned ${res.status.intValue}: ${res.entity.asString}")
+        case ModificationFailed(errorCode, errorDescription) => throw PaymentErrorException(s"Error code: $errorCode, Error message: $errorDescription")
+        case res => throw PaymentErrorException(s"Worldpay server returned ${res.status.intValue}: ${res.entity.asString}")
       }
     }
   }
