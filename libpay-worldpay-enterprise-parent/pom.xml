@@ -3,12 +3,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.wix.pay</groupId>
-    <artifactId>libpay-worldpay-parent</artifactId>
+    <artifactId>libpay-worldpay-enterprise-parent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>libpay Worldpay payment gateway adapter parent</name>
-    <description>libpay module for Worldpay payment gateway parent pom</description>
-    <url>https://github.com/wix/libpay-worldpay</url>
+    <name>libpay Worldpay Enterprise payment gateway adapter parent</name>
+    <description>libpay module for Worldpay Enterprise payment gateway parent pom</description>
+    <url>https://github.com/wix/libpay-worldpay-enterprise</url>
 
 
     <parent>
@@ -46,12 +46,12 @@
 
 
     <scm>
-        <url>https://github.com/wix/libpay-worldpay</url>
+        <url>https://github.com/wix/libpay-worldpay-enterprise</url>
         <tag>HEAD</tag>
     </scm>
 
     <issueManagement>
-        <url>https://github.com/wix/libpay-worldpay/issues</url>
+        <url>https://github.com/wix/libpay-worldpay-enterprise/issues</url>
         <system>GitHub Issues</system>
     </issueManagement>
 
