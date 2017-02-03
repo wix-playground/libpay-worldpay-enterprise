@@ -1,2 +1,2 @@
-# libpay-worldpay
-libpay module for Worldpay payment gateway
+# libpay-worldpay-enterprise
+libpay module for Worldpay Enterprise payment gateway
