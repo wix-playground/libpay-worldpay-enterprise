@@ -10,7 +10,7 @@ import spray.http._
 
 import scala.xml.{Node, PCData}
 
-class WorldpayDriver(port: Int) {
+class WorldpayEnterpriseDriver(port: Int) {
   private val worldpayProbe = new EmbeddedHttpProbe(port, EmbeddedHttpProbe.NotFoundHandler)
 
   def reset(): Unit = worldpayProbe.reset()

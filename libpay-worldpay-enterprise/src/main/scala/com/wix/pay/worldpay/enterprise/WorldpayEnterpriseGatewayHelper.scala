@@ -9,7 +9,7 @@ import com.wix.pay.model.{CurrencyAmount, Deal}
 
 import scala.xml.{Elem, Node, NodeSeq}
 
-object WorldpayGatewayHelper {
+object WorldpayEnterpriseGatewayHelper {
   private val defaultExponent = 2
   private val exceptionalExponents = Map(
     "CLP" -> 0,
@@ -21,7 +21,7 @@ object WorldpayGatewayHelper {
   private def exponentFor(currency: String): Int = exceptionalExponents.getOrElse(currency, defaultExponent)
 
   def createAuthorizationRequest(merchantKey: String, creditCard: CreditCard, currencyAmount: CurrencyAmount, deal: Deal): Elem = {
-    val exponent = WorldpayGatewayHelper.exponentFor(currencyAmount.currency)
+    val exponent = WorldpayEnterpriseGatewayHelper.exponentFor(currencyAmount.currency)
     val amount = toWorldpayAmount(currencyAmount)
 
     <paymentService version="1.0" merchantCode={merchantKey}>
@@ -66,7 +66,7 @@ object WorldpayGatewayHelper {
   }
 
   def createCaptureRequest(merchantKey: String, orderCode: String, currencyAmount: CurrencyAmount): Node = {
-    val exponent = WorldpayGatewayHelper.exponentFor(currencyAmount.currency)
+    val exponent = WorldpayEnterpriseGatewayHelper.exponentFor(currencyAmount.currency)
     val amount = toWorldpayAmount(currencyAmount)
 
     modificationRequest(merchantKey, orderCode) {
@@ -77,7 +77,7 @@ object WorldpayGatewayHelper {
   }
 
   def createRefundRequest(merchantKey: String, orderCode: String, currencyAmount: CurrencyAmount): Node = {
-    val exponent = WorldpayGatewayHelper.exponentFor(currencyAmount.currency)
+    val exponent = WorldpayEnterpriseGatewayHelper.exponentFor(currencyAmount.currency)
     val amount = toWorldpayAmount(currencyAmount)
 
     modificationRequest(merchantKey, orderCode) {
@@ -100,7 +100,7 @@ object WorldpayGatewayHelper {
   }
 
   def toWorldpayAmount(currencyAmount: CurrencyAmount): Int = {
-    val exponent = WorldpayGatewayHelper.exponentFor(currencyAmount.currency)
+    val exponent = WorldpayEnterpriseGatewayHelper.exponentFor(currencyAmount.currency)
 
     JBigDecimal.valueOf(currencyAmount.amount).movePointRight(exponent).intValueExact()
   }

@@ -10,7 +10,7 @@ import scala.collection.mutable.Buffer
 import scala.xml.{Node, NodeSeq, XML}
 
 
-trait WorldpayMatchers { this: SpecWithJUnit =>
+trait WorldpayEnterpriseMatchers { this: SpecWithJUnit =>
   def beAValidPaymentDetailsFor(cardNode: String, creditCard: CreditCard): Matcher[Node] = {
     not(beEmpty[NodeSeq]) ^^ { elem: Node => (elem \\ "paymentDetails" \ cardNode) aka "card type" } and
       be_==(creditCard.number) ^^ { elem: Node => (elem \\ "cardNumber").text } and

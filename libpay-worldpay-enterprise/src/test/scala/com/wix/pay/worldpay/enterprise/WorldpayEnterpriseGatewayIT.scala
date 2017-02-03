@@ -2,8 +2,8 @@ package com.wix.pay.worldpay.enterprise
 
 import com.wix.pay.creditcard.{CreditCard, CreditCardOptionalFields, YearMonth}
 import com.wix.pay.model.{CurrencyAmount, Deal}
-import com.wix.pay.worldpay.enterprise.parsers.{JsonWorldpayAuthorizationParser, JsonWorldpayMerchantParser}
-import com.wix.pay.worldpay.enterprise.testkit.WorldpayDriver
+import com.wix.pay.worldpay.enterprise.parsers.{JsonWorldpayEnterpriseAuthorizationParser, JsonWorldpayEnterpriseMerchantParser}
+import com.wix.pay.worldpay.enterprise.testkit.WorldpayEnterpriseDriver
 import com.wix.pay.{PaymentErrorException, PaymentRejectedException}
 import org.specs2.mutable.SpecWithJUnit
 import org.specs2.specification.Scope
@@ -15,24 +15,24 @@ import scala.util.Success
 /**
  * * @author <a href="mailto:lidanh@wix.com">Lidan Hifi</a>
  */
-class WorldpayGatewayIT extends SpecWithJUnit with WorldpayMatchers {
+class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseMatchers {
   val probePort = 10001
-  val driver = new WorldpayDriver(probePort)
-  val authorizationParser = new JsonWorldpayAuthorizationParser
-  val merchantParser = new JsonWorldpayMerchantParser
+  val driver = new WorldpayEnterpriseDriver(probePort)
+  val authorizationParser = new JsonWorldpayEnterpriseAuthorizationParser
+  val merchantParser = new JsonWorldpayEnterpriseMerchantParser
   val someOrderCode = "$$$"
   val merchantCode = "someMerchant"
   val merchantPassword = "somePassword"
-  val someValidMerchant = merchantParser.stringify(WorldpayMerchant(merchantCode, merchantPassword))
+  val someValidMerchant = merchantParser.stringify(WorldpayEnterpriseMerchant(merchantCode, merchantPassword))
 
   val invalidMerchantPassword = ""
-  val someInvalidMerchant = merchantParser.stringify(WorldpayMerchant(merchantCode, invalidMerchantPassword  ))
+  val someInvalidMerchant = merchantParser.stringify(WorldpayEnterpriseMerchant(merchantCode, invalidMerchantPassword  ))
 
   def anAuthorizationKeyFor(currency: String) = authorizationParser.stringify(
-    WorldpayAuthorization(someOrderCode, currency))
+    WorldpayEnterpriseAuthorization(someOrderCode, currency))
 
   trait Ctx extends Scope {
-    val worldpayGateway = new WorldpayGateway(
+    val worldpayGateway = new WorldpayEnterpriseGateway(
       s"http://localhost:$probePort",
       orderParser = authorizationParser,
       merchantParser = merchantParser)
