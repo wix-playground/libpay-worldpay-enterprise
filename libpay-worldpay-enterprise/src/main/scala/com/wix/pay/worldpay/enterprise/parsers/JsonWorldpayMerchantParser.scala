@@ -1,6 +1,6 @@
-package com.wix.pay.worldpay.parsers
+package com.wix.pay.worldpay.enterprise.parsers
 
-import com.wix.pay.worldpay.WorldpayMerchant
+import com.wix.pay.worldpay.enterprise.WorldpayMerchant
 import org.json4s.DefaultFormats
 import org.json4s.native.Serialization
 

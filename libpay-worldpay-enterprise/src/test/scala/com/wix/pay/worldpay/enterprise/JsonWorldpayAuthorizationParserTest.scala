@@ -1,7 +1,6 @@
-package com.wix.pay.worldpay
+package com.wix.pay.worldpay.enterprise
 
-
-import com.wix.pay.worldpay.parsers.JsonWorldpayAuthorizationParser
+import com.wix.pay.worldpay.enterprise.parsers.JsonWorldpayAuthorizationParser
 import org.specs2.mutable.SpecWithJUnit
 
 

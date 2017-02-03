@@ -1,7 +1,6 @@
-package com.wix.pay.worldpay
+package com.wix.pay.worldpay.enterprise
 
-
-import com.wix.pay.worldpay.parsers.JsonWorldpayMerchantParser
+import com.wix.pay.worldpay.enterprise.parsers.JsonWorldpayMerchantParser
 import org.specs2.mutable.SpecWithJUnit
 
 

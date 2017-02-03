@@ -1,6 +1,6 @@
-package com.wix.pay.worldpay.parsers
+package com.wix.pay.worldpay.enterprise.parsers
 
-import com.wix.pay.worldpay.WorldpayAuthorization
+import com.wix.pay.worldpay.enterprise.WorldpayAuthorization
 
 trait WorldpayAuthorizationParser {
   def parse(authorizationKey: String): WorldpayAuthorization

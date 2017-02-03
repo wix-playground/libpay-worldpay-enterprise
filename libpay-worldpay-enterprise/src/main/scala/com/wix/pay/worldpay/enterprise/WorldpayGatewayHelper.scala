@@ -1,5 +1,4 @@
-package com.wix.pay.worldpay
-
+package com.wix.pay.worldpay.enterprise
 
 import java.math.{BigDecimal => JBigDecimal}
 
@@ -9,7 +8,6 @@ import com.wix.pay.creditcard.networks.Networks
 import com.wix.pay.model.{CurrencyAmount, Deal}
 
 import scala.xml.{Elem, Node, NodeSeq}
-
 
 object WorldpayGatewayHelper {
   private val defaultExponent = 2

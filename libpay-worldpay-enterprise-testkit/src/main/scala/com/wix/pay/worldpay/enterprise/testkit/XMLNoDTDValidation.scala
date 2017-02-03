@@ -1,4 +1,4 @@
-package com.wix.pay.worldpay.testkit
+package com.wix.pay.worldpay.enterprise.testkit
 
 import javax.xml.parsers.SAXParser
 

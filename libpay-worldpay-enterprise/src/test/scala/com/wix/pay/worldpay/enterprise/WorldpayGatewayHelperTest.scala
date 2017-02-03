@@ -1,5 +1,4 @@
-package com.wix.pay.worldpay
-
+package com.wix.pay.worldpay.enterprise
 
 import com.wix.pay.PaymentErrorException
 import com.wix.pay.creditcard.{CreditCard, CreditCardOptionalFields, YearMonth}

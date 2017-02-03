@@ -1,5 +1,4 @@
-package com.wix.pay.worldpay
-
+package com.wix.pay.worldpay.enterprise
 
 import java.io.StringWriter
 
@@ -7,7 +6,7 @@ import akka.actor.ActorSystem
 import com.wix.pay.creditcard.CreditCard
 import com.wix.pay.creditcard.networks.Networks
 import com.wix.pay.model.{CurrencyAmount, Customer, Deal}
-import com.wix.pay.worldpay.parsers._
+import com.wix.pay.worldpay.enterprise.parsers._
 import com.wix.pay.{PaymentErrorException, PaymentException, PaymentGateway, PaymentRejectedException}
 import spray.client.pipelining.sendReceive
 import spray.http._

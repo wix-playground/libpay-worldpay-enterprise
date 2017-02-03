@@ -1,5 +1,4 @@
-package com.wix.pay.worldpay.testkit
-
+package com.wix.pay.worldpay.enterprise.testkit
 
 import java.math.{BigDecimal => JBigDecimal}
 

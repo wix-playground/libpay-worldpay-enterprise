@@ -1,10 +1,9 @@
-package com.wix.pay.worldpay
-
+package com.wix.pay.worldpay.enterprise
 
 import com.wix.pay.creditcard.{CreditCard, CreditCardOptionalFields, YearMonth}
 import com.wix.pay.model.{CurrencyAmount, Deal}
-import com.wix.pay.worldpay.parsers.{JsonWorldpayAuthorizationParser, JsonWorldpayMerchantParser}
-import com.wix.pay.worldpay.testkit.WorldpayDriver
+import com.wix.pay.worldpay.enterprise.parsers.{JsonWorldpayAuthorizationParser, JsonWorldpayMerchantParser}
+import com.wix.pay.worldpay.enterprise.testkit.WorldpayDriver
 import com.wix.pay.{PaymentErrorException, PaymentRejectedException}
 import org.specs2.mutable.SpecWithJUnit
 import org.specs2.specification.Scope
