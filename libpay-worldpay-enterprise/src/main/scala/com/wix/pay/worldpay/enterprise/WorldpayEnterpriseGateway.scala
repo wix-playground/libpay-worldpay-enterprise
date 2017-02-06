@@ -5,7 +5,7 @@ import java.io.StringWriter
 import akka.actor.ActorSystem
 import com.wix.pay.creditcard.CreditCard
 import com.wix.pay.creditcard.networks.Networks
-import com.wix.pay.model.{CurrencyAmount, Customer, Deal}
+import com.wix.pay.model.{CurrencyAmount, Customer, Deal, Payment}
 import com.wix.pay.worldpay.enterprise.parsers._
 import com.wix.pay.{PaymentErrorException, PaymentException, PaymentGateway, PaymentRejectedException}
 import spray.client.pipelining.sendReceive
@@ -54,15 +54,16 @@ class WorldpayEnterpriseGateway(endpointUrl: String = Endpoints.production,
     }
   }
 
-  override def authorize(merchantKey: String, creditCard: CreditCard, currencyAmount: CurrencyAmount, customer: Option[Customer], deal: Option[Deal]): Try[String] = {
+  override def authorize(merchantKey: String, creditCard: CreditCard, payment: Payment, customer: Option[Customer], deal: Option[Deal]): Try[String] = {
     require(deal.isDefined, "Deal is mandatory for Worldpay")
+    require(payment.installments == 1, "WorldPay does not support installments")
 
     withTry {
       val merchant = merchantParser.parse(merchantKey)
-      val response = postRequest(merchant, WorldpayEnterpriseGatewayHelper.createAuthorizationRequest(merchant.merchantCode, creditCard, currencyAmount, deal.get))
+      val response = postRequest(merchant, WorldpayEnterpriseGatewayHelper.createAuthorizationRequest(merchant.merchantCode, creditCard, payment.currencyAmount, deal.get))
 
       response match {
-        case WasAuthorizedSuccessfully(orderId) => orderParser.stringify(WorldpayEnterpriseAuthorization(orderId, currencyAmount.currency))
+        case WasAuthorizedSuccessfully(orderId) => orderParser.stringify(WorldpayEnterpriseAuthorization(orderId, payment.currencyAmount.currency))
         case AuthorizationFailed(event, code, description) if event == "REFUSED" => throw PaymentRejectedException(s"Error code: $code, Error message: $description")
         case AuthorizationFailed(event, code, description) if event == "ERROR" => throw PaymentErrorException(s"Error code: $code, Error message: $description")
         case res => throw PaymentErrorException(s"Worldpay server returned ${res.status.intValue}: ${res.entity.asString}")
@@ -86,11 +87,13 @@ class WorldpayEnterpriseGateway(endpointUrl: String = Endpoints.production,
     }
   }
 
-  override def sale(merchantKey: String, creditCard: CreditCard, currencyAmount: CurrencyAmount, customer: Option[Customer], deal: Option[Deal]): Try[String] = {
-    val authorizationResult = authorize(merchantKey, creditCard, currencyAmount, customer, deal)
+  override def sale(merchantKey: String, creditCard: CreditCard, payment: Payment, customer: Option[Customer], deal: Option[Deal]): Try[String] = {
+    require(payment.installments == 1, "WorldPay does not support installments")
+
+    val authorizationResult = authorize(merchantKey, creditCard, payment, customer, deal)
 
     authorizationResult match {
-      case Success(orderCode) => capture(merchantKey, orderCode, currencyAmount.amount)
+      case Success(orderCode) => capture(merchantKey, orderCode, payment.currencyAmount.amount)
       case _ => authorizationResult
     }
   }

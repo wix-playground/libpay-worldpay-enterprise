@@ -1,7 +1,7 @@
 package com.wix.pay.worldpay.enterprise
 
 import com.wix.pay.creditcard.{CreditCard, CreditCardOptionalFields, YearMonth}
-import com.wix.pay.model.{CurrencyAmount, Deal}
+import com.wix.pay.model.{CurrencyAmount, Deal, Payment}
 import com.wix.pay.worldpay.enterprise.parsers.{JsonWorldpayEnterpriseAuthorizationParser, JsonWorldpayEnterpriseMerchantParser}
 import com.wix.pay.worldpay.enterprise.testkit.WorldpayEnterpriseDriver
 import com.wix.pay.{PaymentErrorException, PaymentRejectedException}
@@ -50,6 +50,7 @@ class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseM
   "authorise request" should {
     val creditCard = CreditCard("4580458045804580", YearMonth(2020, 12), None)
     val currencyAmount = CurrencyAmount("USD", 100)
+    val payment = Payment(currencyAmount)
     val deal = Deal("123", Some("title"), Some("desc"))
     val authorizationKey = anAuthorizationKeyFor(currencyAmount.currency)
 
@@ -57,7 +58,7 @@ class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseM
       driver.anAuthorizationRequest(
         merchantCode, merchantPassword, creditCard, currencyAmount, None, Some(deal)) returns someOrderCode
 
-      worldpayGateway.authorize(someValidMerchant, creditCard, currencyAmount, None, Some(deal)) must
+      worldpayGateway.authorize(someValidMerchant, creditCard, payment, None, Some(deal)) must
         be_===(Success(authorizationKey))
     }
 
@@ -67,7 +68,7 @@ class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseM
       driver.anAuthorizationRequest(
         merchantCode, merchantPassword, cardWithCvv, currencyAmount, None, Some(deal)) returns someOrderCode
 
-      worldpayGateway.authorize(someValidMerchant, cardWithCvv, currencyAmount, None, Some(deal)) must
+      worldpayGateway.authorize(someValidMerchant, cardWithCvv, payment, None, Some(deal)) must
         be_===(Success(authorizationKey))
     }
 
@@ -85,7 +86,7 @@ class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseM
         None,
         Some(deal)) refuses("Some error num", "me$$age")
 
-      worldpayGateway.authorize(someValidMerchant, rejectedCreditCard, currencyAmount, None, Some(deal)) must
+      worldpayGateway.authorize(someValidMerchant, rejectedCreditCard, payment, None, Some(deal)) must
         beAFailedTry.like {
           case e: PaymentRejectedException => e.message must beEqualTo("Error code: Some error num, Error message: me$$age")
         }
@@ -105,7 +106,7 @@ class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseM
         None,
         Some(deal)) errors("Some error num", "me$$age")
 
-      worldpayGateway.authorize(someValidMerchant, errorCreditCard, currencyAmount, None, Some(deal)) must
+      worldpayGateway.authorize(someValidMerchant, errorCreditCard, payment, None, Some(deal)) must
         beAFailedTry.like {
           case e: PaymentErrorException => e.message must beEqualTo("Error code: Some error num, Error message: me$$age")
         }
@@ -123,7 +124,7 @@ class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseM
         None,
         Some(deal)) failsWithStatusAndMessage(statusCode, errorMessage)
 
-      worldpayGateway.authorize(someInvalidMerchant, creditCard, currencyAmount, None, Some(deal)) must
+      worldpayGateway.authorize(someInvalidMerchant, creditCard, payment, None, Some(deal)) must
         beAFailedTry.like {
           case e: PaymentErrorException => e.message must (contain(s"Worldpay server returned ${statusCode.intValue}:") and contain(errorMessage))
         }
@@ -202,6 +203,7 @@ class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseM
       additionalFields = Some(CreditCardOptionalFields.withFields(
         holderName = Some("kukibuki"))))
     val currencyAmount = CurrencyAmount("USD", 100)
+    val payment = Payment(currencyAmount)
     val deal = Deal("123", Some("title"), Some("desc"))
     val authorizationKey = anAuthorizationKeyFor(currencyAmount.currency)
 
@@ -210,7 +212,7 @@ class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseM
         merchantCode, merchantPassword, creditCard, currencyAmount, None, Some(deal)) returns someOrderCode
       driver.aCaptureRequest(merchantCode, merchantPassword, someOrderCode, currencyAmount) returns someOrderCode
 
-      worldpayGateway.sale(someValidMerchant, creditCard, currencyAmount, None, Some(deal)) must
+      worldpayGateway.sale(someValidMerchant, creditCard, payment, None, Some(deal)) must
         be_===(Success(authorizationKey))
 
       driver.requests must
