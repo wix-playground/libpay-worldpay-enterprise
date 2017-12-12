@@ -46,9 +46,9 @@
             <version>${com.wix.pay.libpay.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.spray</groupId>
-            <artifactId>spray-client_${scala.dependencies.version}</artifactId>
-            <version>${io.spray.client.version}</version>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-http_${scala.dependencies.version}</artifactId>
+            <version>${com.typesafe.akka.http.version}</version>
         </dependency>
         <dependency>
             <groupId>com.typesafe.akka</groupId>

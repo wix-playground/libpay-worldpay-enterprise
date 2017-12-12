@@ -1,15 +1,18 @@
 package com.wix.pay.worldpay.enterprise
 
+
+import scala.reflect.ClassTag
+import scala.reflect.classTag
+import scala.util.Success
+import org.specs2.matcher.{Expectable, MatchResult, Matcher}
+import org.specs2.mutable.SpecWithJUnit
+import org.specs2.specification.Scope
+import akka.http.scaladsl.model.StatusCodes
 import com.wix.pay.creditcard.{CreditCard, CreditCardOptionalFields, YearMonth}
 import com.wix.pay.model.{CurrencyAmount, Deal, Payment}
 import com.wix.pay.worldpay.enterprise.parsers.{JsonWorldpayEnterpriseAuthorizationParser, JsonWorldpayEnterpriseMerchantParser}
 import com.wix.pay.worldpay.enterprise.testkit.WorldpayEnterpriseDriver
 import com.wix.pay.{PaymentErrorException, PaymentRejectedException}
-import org.specs2.mutable.SpecWithJUnit
-import org.specs2.specification.Scope
-import spray.http._
-
-import scala.util.Success
 
 
 /**
@@ -23,13 +26,39 @@ class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseM
   val someOrderCode = "$$$"
   val merchantCode = "someMerchant"
   val merchantPassword = "somePassword"
-  val someValidMerchant = merchantParser.stringify(WorldpayEnterpriseMerchant(merchantCode, merchantPassword))
+  val someValidMerchant: String = merchantParser.stringify(WorldpayEnterpriseMerchant(merchantCode, merchantPassword))
 
   val invalidMerchantPassword = ""
-  val someInvalidMerchant = merchantParser.stringify(WorldpayEnterpriseMerchant(merchantCode, invalidMerchantPassword  ))
+  val someInvalidMerchant: String = merchantParser.stringify(WorldpayEnterpriseMerchant(
+    merchantCode, invalidMerchantPassword))
 
-  def anAuthorizationKeyFor(currency: String) = authorizationParser.stringify(
+  def anAuthorizationKeyFor(currency: String): String = authorizationParser.stringify(
     WorldpayEnterpriseAuthorization(someOrderCode, currency))
+
+  def beAnErrorWithMessageContaining[T <: Throwable : ClassTag](messageParts: String*): Matcher[Throwable] = new Matcher[Throwable] {
+    def apply[S <: Throwable](t: Expectable[S]): MatchResult[S] = {
+      val isOfType = t.value match {
+        case _: T => true
+        case _ => false
+      }
+      val isContainsAll = messageParts.forall { t.value.getMessage.contains }
+      val classType = classTag[T].runtimeClass
+      val partsStr = messageParts.mkString(", ")
+
+      result(
+        isOfType && isContainsAll,
+        s"${t.description} is of type [$classType] and contains all of [$partsStr]",
+        if (!isOfType && !isContainsAll) {
+          s"${t.description} is not of type $classType, and does not contain all of [$partsStr]"
+        } else if (!isOfType && isContainsAll) {
+          s"${t.description} contains all of [$partsStr], but is not of type [$classType]"
+        } else {
+          s"${t.description} is of type [$classType], but does not contain all of [$partsStr]"
+        },
+        t)
+    }
+  }
+
 
   trait Ctx extends Scope {
     val worldpayGateway = new WorldpayEnterpriseGateway(
@@ -40,9 +69,11 @@ class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseM
     driver.reset()
   }
 
+
   step {
     driver.start()
   }
+
 
   sequential
 
@@ -63,7 +94,8 @@ class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseM
     }
 
     "successfully yield an authorization key upon a valid request (with cvv)" in new Ctx {
-      val cardWithCvv = creditCard.copy(additionalFields = Some(CreditCardOptionalFields(csc = Some("123"))))
+      val cardWithCvv: CreditCard = creditCard.copy(
+        additionalFields = Some(CreditCardOptionalFields(csc = Some("123"))))
 
       driver.anAuthorizationRequest(
         merchantCode, merchantPassword, cardWithCvv, currencyAmount, None, Some(deal)) returns someOrderCode
@@ -74,7 +106,7 @@ class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseM
 
     "gracefully return a reject error upon a business-related error" in new Ctx {
       // worldpay service returns REFUSED response when the card holder name is REFUSED
-      val rejectedCreditCard = creditCard.copy(
+      val rejectedCreditCard: CreditCard = creditCard.copy(
         additionalFields = Some(CreditCardOptionalFields.withFields(
           holderName = Some("REFUSED"))))
 
@@ -87,14 +119,12 @@ class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseM
         Some(deal)) refuses("Some error num", "me$$age")
 
       worldpayGateway.authorize(someValidMerchant, rejectedCreditCard, payment, None, Some(deal)) must
-        beAFailedTry.like {
-          case e: PaymentRejectedException => e.message must beEqualTo("Error code: Some error num, Error message: me$$age")
-        }
+        beAFailedTry(check = PaymentRejectedException("Error code: Some error num, Error message: me$$age"))
     }
 
     "gracefully return a payment error upon a technical error" in new Ctx {
       // worldpay service returns ERROR response when the card holder name is ERROR
-      val errorCreditCard = creditCard.copy(
+      val errorCreditCard: CreditCard = creditCard.copy(
         additionalFields = Some(CreditCardOptionalFields.withFields(
           holderName = Some("ERROR"))))
 
@@ -107,14 +137,12 @@ class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseM
         Some(deal)) errors("Some error num", "me$$age")
 
       worldpayGateway.authorize(someValidMerchant, errorCreditCard, payment, None, Some(deal)) must
-        beAFailedTry.like {
-          case e: PaymentErrorException => e.message must beEqualTo("Error code: Some error num, Error message: me$$age")
-        }
+        beAFailedTry(check = PaymentErrorException("Error code: Some error num, Error message: me$$age"))
     }
 
     "gracefully return an error upon a gateway exception" in new Ctx {
       val errorMessage = "This request requires HTTP authentication."
-      val statusCode = StatusCodes.Unauthorized
+      val statusCode: StatusCodes.ClientError = StatusCodes.Unauthorized
 
       driver.anAuthorizationRequest(
         merchantCode,
@@ -125,9 +153,9 @@ class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseM
         Some(deal)) failsWithStatusAndMessage(statusCode, errorMessage)
 
       worldpayGateway.authorize(someInvalidMerchant, creditCard, payment, None, Some(deal)) must
-        beAFailedTry.like {
-          case e: PaymentErrorException => e.message must (contain(s"Worldpay server returned ${statusCode.intValue}:") and contain(errorMessage))
-        }
+        beAFailedTry(check = beAnErrorWithMessageContaining[PaymentErrorException](
+          s"Worldpay server returned ${statusCode.intValue}:",
+          errorMessage))
     }
   }
 
@@ -144,8 +172,8 @@ class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseM
     }
 
     "successfully yield an authorization key upon a valid request with different currency" in new Ctx {
-      val differentCurrency = currencyAmount.copy(currency = "ISK")
-      val differentAuthorizationKey = anAuthorizationKeyFor(differentCurrency.currency)
+      val differentCurrency: CurrencyAmount = currencyAmount.copy(currency = "ISK")
+      val differentAuthorizationKey: String = anAuthorizationKeyFor(differentCurrency.currency)
 
       driver.aCaptureRequest(
         merchantCode, merchantPassword, someOrderCode, differentCurrency, 0) returns someOrderCode
@@ -156,8 +184,8 @@ class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseM
 
     "gracefully return a payment error a technical error" in new Ctx {
       // generate some invalid data
-      val invalidCurrencyAmount = currencyAmount.copy(currency = "WIX_DOLLAR")
-      val invalidAuthorizationKey = anAuthorizationKeyFor(invalidCurrencyAmount.currency)
+      val invalidCurrencyAmount: CurrencyAmount = currencyAmount.copy(currency = "WIX_DOLLAR")
+      val invalidAuthorizationKey: String = anAuthorizationKeyFor(invalidCurrencyAmount.currency)
 
       driver.aCaptureRequest(
         merchantCode,
@@ -166,14 +194,12 @@ class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseM
         invalidCurrencyAmount) errors("Some error code", "me$$age")
 
       worldpayGateway.capture(someValidMerchant, invalidAuthorizationKey, invalidCurrencyAmount.amount) must
-        beAFailedTry.like {
-          case e: PaymentErrorException => e.message must beEqualTo("Error code: Some error code, Error message: me$$age")
-        }
+        beAFailedTry(check = PaymentErrorException("Error code: Some error code, Error message: me$$age"))
     }
 
     "gracefully return an error upon a gateway exception" in new Ctx {
       val errorMessage = "This request requires HTTP authentication."
-      val statusCode = StatusCodes.Unauthorized
+      val statusCode: StatusCodes.ClientError = StatusCodes.Unauthorized
 
       driver.aCaptureRequest(
         merchantCode,
@@ -182,16 +208,13 @@ class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseM
         currencyAmount) failsWithStatusAndMessage(statusCode, errorMessage)
 
       worldpayGateway.capture(someInvalidMerchant, authorizationKey, currencyAmount.amount) must
-        beAFailedTry.like {
-          case e: PaymentErrorException => e.message must (contain(s"Worldpay server returned ${statusCode.intValue}:") and contain(errorMessage))
-        }
+        beAFailedTry(check = beAnErrorWithMessageContaining[PaymentErrorException](
+          s"Worldpay server returned ${statusCode.intValue}:", errorMessage))
     }
 
     "gracefully return a paymentErrorException upon an invalid request" in new Ctx {
       worldpayGateway.capture(someValidMerchant, "Some invalid json code", currencyAmount.amount) must
-        beAFailedTry(
-          check = beAnInstanceOf[PaymentErrorException]
-        )
+        beAFailedTry(check = beAnInstanceOf[PaymentErrorException])
     }
   }
 
@@ -226,6 +249,7 @@ class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseM
     }
   }
 
+
   "voidAuthorization request" should {
     val authorizationKey = anAuthorizationKeyFor("USD")
 
@@ -237,22 +261,19 @@ class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseM
 
     "gracefully return an error upon a gateway exception" in new Ctx {
       val errorMessage = "This request requires HTTP authentication."
-      val statusCode = StatusCodes.Unauthorized
+      val statusCode: StatusCodes.ClientError = StatusCodes.Unauthorized
 
       driver.aVoidAuthorizationRequest(
         merchantCode, invalidMerchantPassword, someOrderCode) failsWithStatusAndMessage(statusCode, errorMessage)
 
       worldpayGateway.voidAuthorization(someInvalidMerchant, authorizationKey) must
-        beAFailedTry.like {
-          case e: PaymentErrorException => e.message must (contain(s"Worldpay server returned ${statusCode.intValue}:") and contain(errorMessage))
-        }
+        beAFailedTry(check = beAnErrorWithMessageContaining[PaymentErrorException](
+          s"Worldpay server returned ${statusCode.intValue}:", errorMessage))
     }
 
     "gracefully return a paymentErrorException upon an invalid request" in new Ctx {
       worldpayGateway.voidAuthorization(someValidMerchant, "Some invalid json code") must
-        beAFailedTry(
-          check = beAnInstanceOf[PaymentErrorException]
-        )
+        beAFailedTry(check = beAnInstanceOf[PaymentErrorException])
     }
   }
 

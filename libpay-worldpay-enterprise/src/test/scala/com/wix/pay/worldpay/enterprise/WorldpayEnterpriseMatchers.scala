@@ -1,13 +1,13 @@
 package com.wix.pay.worldpay.enterprise
 
-import com.wix.pay.creditcard.CreditCard
+
+import scala.xml.{Node, NodeSeq, XML}
 import org.specs2.matcher.MustMatchers._
 import org.specs2.matcher._
 import org.specs2.mutable.SpecWithJUnit
-import spray.http.HttpRequest
-
-import scala.collection.mutable.Buffer
-import scala.xml.{Node, NodeSeq, XML}
+import akka.http.scaladsl.model.HttpRequest
+import com.wix.pay.creditcard.CreditCard
+import com.wix.e2e.http.client.extractors.HttpMessageExtractors._
 
 
 trait WorldpayEnterpriseMatchers { this: SpecWithJUnit =>
@@ -58,17 +58,21 @@ trait WorldpayEnterpriseMatchers { this: SpecWithJUnit =>
                                  currency: String,
                                  amount: Int,
                                  cardNode: String,
-                                 creditCard: CreditCard): Matcher[Buffer[HttpRequest]] = {
+                                 creditCard: CreditCard): Matcher[Seq[HttpRequest]] = {
     // exactly 2 requests were sent
-    haveSize[Buffer[_]](2) and
+    haveSize[Seq[_]](2) and
     // the first request should be authorization
-    beAValidAuthorizationRequest(merchantKey = ===(merchantKey),
-                                 paymentDetails = beAValidPaymentDetailsFor(cardNode, creditCard),
-                                 currencyAmount = beAValidCurrencyAmount(currency, amount)) ^^ { req: Buffer[HttpRequest] => XML.loadString(req.head.entity.asString) aka "Authorization request" } and
+    beAValidAuthorizationRequest(
+      merchantKey = ===(merchantKey),
+      paymentDetails = beAValidPaymentDetailsFor(cardNode, creditCard),
+      currencyAmount = beAValidCurrencyAmount(currency, amount)) ^^ { req: Seq[HttpRequest] =>
+        XML.loadString(req.head.entity.extractAsString) aka "Authorization request" } and
     // the following should be capture
-    beAValidModificationRequest(merchantKey = merchantKey,
-                                orderCode = orderCode,
-                                modificationType = "capture",
-                                modification = beAValidCurrencyAmount(currency, amount)) ^^ { req: Buffer[HttpRequest] => XML.loadString(req(1).entity.asString) aka "Capture request" }
+    beAValidModificationRequest(
+      merchantKey = merchantKey,
+      orderCode = orderCode,
+      modificationType = "capture",
+      modification = beAValidCurrencyAmount(currency, amount)) ^^ { req: Seq[HttpRequest] =>
+        XML.loadString(req(1).entity.extractAsString) aka "Capture request" }
   }
 }
