@@ -119,7 +119,7 @@ class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseM
         Some(deal)) refuses("Some error num", "me$$age")
 
       worldpayGateway.authorize(someValidMerchant, rejectedCreditCard, payment, None, Some(deal)) must
-        beAFailedTry(check = PaymentRejectedException("Error code: Some error num, Error message: me$$age"))
+        beAFailedTry(be_==(PaymentRejectedException("Error code: Some error num, Error message: me$$age")))
     }
 
     "gracefully return a payment error upon a technical error" in new Ctx {
@@ -137,7 +137,7 @@ class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseM
         Some(deal)) errors("Some error num", "me$$age")
 
       worldpayGateway.authorize(someValidMerchant, errorCreditCard, payment, None, Some(deal)) must
-        beAFailedTry(check = PaymentErrorException("Error code: Some error num, Error message: me$$age"))
+        beAFailedTry(be_==(PaymentErrorException("Error code: Some error num, Error message: me$$age")))
     }
 
     "gracefully return an error upon a gateway exception" in new Ctx {
@@ -194,7 +194,7 @@ class WorldpayEnterpriseGatewayIT extends SpecWithJUnit with WorldpayEnterpriseM
         invalidCurrencyAmount) errors("Some error code", "me$$age")
 
       worldpayGateway.capture(someValidMerchant, invalidAuthorizationKey, invalidCurrencyAmount.amount) must
-        beAFailedTry(check = PaymentErrorException("Error code: Some error code, Error message: me$$age"))
+        beAFailedTry(be_==(PaymentErrorException("Error code: Some error code, Error message: me$$age")))
     }
 
     "gracefully return an error upon a gateway exception" in new Ctx {
