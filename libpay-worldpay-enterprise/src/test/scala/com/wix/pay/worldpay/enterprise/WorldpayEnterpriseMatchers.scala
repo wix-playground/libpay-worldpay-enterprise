@@ -1,18 +1,18 @@
 package com.wix.pay.worldpay.enterprise
 
 
-import scala.xml.{Node, NodeSeq, XML}
-import org.specs2.matcher.MustMatchers._
+import akka.http.scaladsl.model.HttpRequest
+import com.wix.e2e.http.client.extractors.HttpMessageExtractors._
+import com.wix.pay.creditcard.CreditCard
 import org.specs2.matcher._
 import org.specs2.mutable.SpecWithJUnit
-import akka.http.scaladsl.model.HttpRequest
-import com.wix.pay.creditcard.CreditCard
-import com.wix.e2e.http.client.extractors.HttpMessageExtractors._
+
+import scala.xml.{Node, NodeSeq, XML}
 
 
 trait WorldpayEnterpriseMatchers { this: SpecWithJUnit =>
   def beAValidPaymentDetailsFor(cardNode: String, creditCard: CreditCard): Matcher[Node] = {
-    not(beEmpty[NodeSeq]) ^^ { elem: Node => (elem \\ "paymentDetails" \ cardNode) aka "card type" } and
+    not(beEmpty[NodeSeq]) ^^ { elem: Node => elem \\ "paymentDetails" \ cardNode } and
       be_==(creditCard.number) ^^ { elem: Node => (elem \\ "cardNumber").text } and
       be_==(creditCard.expiration.month.toString) ^^ { elem: Node => (elem \\ "date" \ "@month").text } and
       be_==(creditCard.expiration.year.toString) ^^ { elem: Node => (elem \\ "date" \ "@year").text } and
@@ -38,8 +38,8 @@ trait WorldpayEnterpriseMatchers { this: SpecWithJUnit =>
                                    paymentDetails: Matcher[Node] = AlwaysMatcher(),
                                    currencyAmount: Matcher[Node] = AlwaysMatcher()): Matcher[Node] = {
     merchantKey ^^ { elem: Node => (elem \\ "paymentService" \ "@merchantCode").text } and
-      not(beEmpty[NodeSeq]) ^^ { elem: Node => elem \\ "order" \ "@orderCode" aka "order code" } and
-      paymentDetails ^^ { elem: Node => (elem \\ "paymentDetails").head aka "payment details" } and
+      not(beEmpty[NodeSeq]) ^^ { elem: Node => elem \\ "order" \ "@orderCode" } and
+      paymentDetails ^^ { elem: Node => (elem \\ "paymentDetails").head } and
       currencyAmount ^^ { elem: Node => (elem \\ "amount").head }
   }
 
@@ -49,8 +49,8 @@ trait WorldpayEnterpriseMatchers { this: SpecWithJUnit =>
                                   modification: Matcher[Node] = AlwaysMatcher()): Matcher[Node] = {
     be_==(merchantKey) ^^ { elem: Node => (elem \\ "paymentService" \ "@merchantCode").text } and
       be_==(orderCode) ^^ { elem: Node => (elem \\ "orderModification" \ "@orderCode").text } and
-      not(beEmpty[NodeSeq]) ^^ { elem: Node => elem \\ modificationType aka "modification type" } and
-      modification ^^ { elem: Node => (elem \\ modificationType).head aka "modification details" }
+      not(beEmpty[NodeSeq]) ^^ { elem: Node => elem \\ modificationType } and
+      modification ^^ { elem: Node => (elem \\ modificationType).head }
   }
 
   def containsASaleTransactionFor(merchantKey: String,
@@ -66,13 +66,13 @@ trait WorldpayEnterpriseMatchers { this: SpecWithJUnit =>
       merchantKey = ===(merchantKey),
       paymentDetails = beAValidPaymentDetailsFor(cardNode, creditCard),
       currencyAmount = beAValidCurrencyAmount(currency, amount)) ^^ { req: Seq[HttpRequest] =>
-        XML.loadString(req.head.entity.extractAsString) aka "Authorization request" } and
+        XML.loadString(req.head.entity.extractAsString) } and
     // the following should be capture
     beAValidModificationRequest(
       merchantKey = merchantKey,
       orderCode = orderCode,
       modificationType = "capture",
       modification = beAValidCurrencyAmount(currency, amount)) ^^ { req: Seq[HttpRequest] =>
-        XML.loadString(req(1).entity.extractAsString) aka "Capture request" }
+        XML.loadString(req(1).entity.extractAsString) }
   }
 }
